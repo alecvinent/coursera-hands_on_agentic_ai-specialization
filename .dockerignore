@@ -1,0 +1,10 @@
+# Docker build context exclusions for the MCP server image.
+.git/
+__pycache__/
+*.pyc
+*.log*
+.env*
+coverage/
+specs/
+tests/
+docker-compose*.yml
