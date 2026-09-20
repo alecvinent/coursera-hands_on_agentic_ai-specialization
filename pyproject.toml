@@ -21,9 +21,11 @@ fastapi = "^0.138.1"
 pymupdf = "^1.27.2.3"
 Markdown = "^3.10"
 pypdf = "^6.14.2"
+mcp = "^2.2.0"
 
 [tool.poetry.group.dev.dependencies]
 streamlit = "^1.44"
+ruff = "^0.16.8"
 
 [build-system]
 requires = ["poetry-core"]
