@@ -1,0 +1,3 @@
+Write a short reflection in no more than three sentences on one challenge you faced and how you resolved it.  
+
+One key challenge was managing the agent's tool execution flow to prevent unnecessary or redundant web searches during follow-up user queries. I resolved this by incorporating conversational memory (`ConversationBufferMemory`), which allowed the agent to reuse prior search results stored in context rather than re-querying the API for simple reformatting requests. This significantly improved response latency while reducing unnecessary external API calls.

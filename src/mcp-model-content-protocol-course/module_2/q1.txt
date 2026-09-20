@@ -1,0 +1,8 @@
+How did designing the MCP resource schema influence your understanding of creating clear, scalable structures for real-time AI access to sales data?
+
+Designing this MCP resource schema highlighted key insights about structuring data for real-time AI access:
+
+* **Predictable URIs simplify AI intent mapping**: Using a clean scheme (e.g., `sales://customers/id/{id}`) allows the AI to map natural language queries directly to data locations without needing complex parameter translation layers.
+* **Pre-filtered URIs reduce AI cognitive load**: Exposing common views (like `sales://deals/stage/closing_this_month`) as distinct resource paths prevents the AI from having to pull massive raw datasets and perform client-side filtering.
+* **Strict typing ensures data reliability**: Defining explicit JSON schemas and required properties guarantees that the AI receives structured, predictable data types, minimizing hallucination and parsing errors during real-time insights generation.
+* **Resource separation vs. composition**: Decoupling entities into distinct resources (customers, deals, activities) while maintaining relational IDs (e.g., `customerId`) enables the AI to fetch lightweight payloads initially and compose multi-resource joins only when necessary.

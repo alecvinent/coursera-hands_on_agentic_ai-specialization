@@ -1,0 +1,156 @@
+How does your prototype demonstrate effective collaboration and autonomy among agents, and what design choices most influenced the system’s ability to decompose tasks and synthesize coherent research outputs?
+
+### 1. Dynamic Collaboration Patterns
+
+To move beyond a linear pipeline, we introduce **feedback loops**, **critic nodes**, and **iterative refinements**. Agents no longer just hand off data downstream; downstream agents can critique upstream results, request additional data, or debate findings.
+
+```
+                  +---------------------------+
+                  |  Literature Search Agent  |<--------------------+
+                  +-------------+-------------+                     |
+                                |                                   |
+                                v                                   | Iterative
+                  +---------------------------+                     | Research
+                  |      Analysis Agent       |                     | Gap Query
+                  +-------------+-------------+                     |
+                                |                                   |
+                                v                                   |
+                  +---------------------------+                     |
+                  |     Synthesis Agent       |--[Gaps / Conflicts]-+
+                  +-------------+-------------+
+                                |
+                   [Draft Ready | Validated]
+                                v
+                  +---------------------------+
+                  |   Peer Review / Guard     |--[Needs Revision]--> (Back to Synthesis)
+                  +-------------+-------------+
+                                |
+                                v
+                     +---------------------+
+                     | Final Research Output |
+                     +---------------------+
+
+```
+
+#### Code Implementation: Dynamic Refinement Loop
+
+In LangGraph, conditional edges allow the `Synthesis Agent` or a dedicated `Reviewer Agent` to dynamically trigger a secondary search or re-analysis if context gaps or direct contradictions are detected.
+
+```python
+def synthesis_evaluator_node(state: ResearchState) -> Dict:
+    """Evaluates whether the synthesis is comprehensive or needs additional evidence."""
+    summary = state["final_summary"]
+    insights = state["analysis_insights"]
+    
+    # Dynamic decision logic: Check if analysis contains conflicting viewpoints
+    has_conflicts = "contradicts" in str(insights).lower() or "however" in str(insights).lower()
+    has_insufficient_data = len(insights) < 2
+
+    if has_insufficient_data or (has_conflicts and not state.get("conflict_resolved")):
+        logging.warning("[Evaluator] Gaps or unresolved conflicts found. Requesting refined search...")
+        return {"next_step": "refine_search", "search_refinement_query": f"{state['query']} counterarguments and edge cases"}
+    
+    return {"next_step": "finalize"}
+
+# Graph Routing Logic
+def route_synthesis(state: ResearchState) -> str:
+    if state.get("next_step") == "refine_search":
+        return "search"  # Loops back to Literature Search Agent with a refined sub-query
+    return END
+
+# Adding dynamic conditional edges to the graph
+workflow.add_conditional_edges("synthesis", route_synthesis, {"search": "search", END: END})
+
+```
+
+---
+
+### 2. Advanced Autonomy & Adaptive Decision-Making
+
+Rather than relying purely on static boolean filters (e.g., `score >= 0.7`), agents can adjust their strategy based on environmental cues, data sparsity, or ambiguous queries.
+
+```
+                           +--------------------------------+
+                           |  Literature Search Received    |
+                           +---------------+----------------+
+                                           |
+                                 [Check Result Density]
+                                           |
+                    +----------------------+----------------------+
+                    |                                             |
+             (Sufficient Sources)                        (Low Density / Sparse)
+                    |                                             |
+                    v                                             v
+    +-------------------------------+             +-------------------------------+
+    | Execute Standard Analysis     |             | Adaptive Relaxation Strategy: |
+    | & Synthesis                   |             | - Relax Credibility (0.7->0.5)|
+    +-------------------------------+             | - Expand Keyword Scope        |
+                                                  | - Flag Low Confidence Output  |
+                                                  +---------------+---------------+
+                                                                  |
+                                                                  v
+                                                  +-------------------------------+
+                                                  | Proceed with Caveated Context |
+                                                  +-------------------------------+
+
+```
+
+* **Adaptive Strategy:** If a search query yields fewer than 2 primary sources above the high-confidence threshold (0.7), the `Literature Search Agent` autonomously falls back to a broad discovery mode: lowering the threshold to 0.5, appending academic synonyms, and setting a flag (`confidence_warning=True`) to instruct the `Synthesis Agent` to explicitly caveat its findings.
+* **Conflict Resolution Strategy:** When the `Analysis Agent` detects direct contradictions between highly credible papers (e.g., Paper A proves X, Paper B disproves X), it classifies the topic as a "Scientific Debate" rather than picking a side. It structures the analysis into **Supporting Evidence**, **Counter-Evidence**, and **Methodological Differences**.
+
+---
+
+### 3. Concrete Example: Synthesized Output with Edge-Case Handling
+
+Here is an explicit example of how the agents resolve conflicting sources and synthesize a final output for a complex research query.
+
+#### Sample Input Query
+
+> *"Does fine-tuning LLMs improve domain-specific reasoning capability without inducing catastrophic forgetting?"*
+
+#### Mock Agent Inputs & Intermediate State
+
+1. **Search Agent** retrieves 3 papers, including conflicting studies.
+2. **Analysis Agent** extracts conflicting insights:
+* *Paper 1 (Credibility 0.95):* Shows fine-tuning improves accuracy by 22% in medical reasoning.
+* *Paper 2 (Credibility 0.91):* Shows fine-tuning degrades general mathematical performance by 14% (catastrophic forgetting).
+
+
+3. **Synthesis Agent** applies structural resolution to present a balanced report.
+
+#### Final Generated Synthesis Report
+
+```markdown
+# Research Synthesis: Fine-Tuning LLMs & Catastrophic Forgetting
+
+## 1. Executive Summary
+Recent literature indicates that fine-tuning Large Language Models (LLMs) significantly enhances performance in domain-specific tasks, but risks degrading general capabilities depending on parameter update strategies.
+
+## 2. Key Synthesis & Evidence Breakdown
+
+| Topic | Primary Finding | Confidence & Consensus | Key Sources |
+| :--- | :--- | :--- | :--- |
+| **Domain Accuracy** | Domain-specific accuracy increases significantly (18% - 25% boost). | High Consensus | *Journal of AI Research (2024)* |
+| **General Retention** | Full fine-tuning degrades general capabilities across math & logic tasks. | High Consensus (Trade-off) | *Neural Architecture Review (2023)* |
+| **Mitigation Strategies**| PEFT/LoRA and Parameter Freezing eliminate up to 90% of observed forgetting. | Emerging Consensus | *NeurIPS Proceedings (2024)* |
+
+## 3. Conflict & Edge-Case Analysis
+* **The Forgetting Contradiction:** Source A claims domain fine-tuning retains general performance, while Source B observes a 14% drop in baseline logic tests.
+* **Resolution / Root Cause:** The discrepancy stems from fine-tuning methodologies:
+  * **Full Fine-Tuning** alters all weights, causing catastrophic forgetting (Source B).
+  * **Parameter-Efficient Fine-Tuning (PEFT/LoRA)** restricts updates to adapter layers, mitigating forgetting while preserving domain gain (Source A).
+
+## 4. Governance & Audit Trace
+* **Sources Analyzed:** 3
+* **Filtered/Rejected Sources:** 1 (Excluded: *Unverified Blog Post*, Score: 0.25)
+* **Confidence Rating:** High (Cross-verified across 2 peer-reviewed datasets)
+
+```
+
+---
+
+### Summary of Improvements
+
+1. **Feedback & Negotiation Loops:** Evaluator nodes enable downstream agents to reject synthesis and trigger iterative re-queries.
+2. **Adaptive Decision-Making:** Search parameters adjust dynamically based on context availability instead of static hardcoded thresholds.
+3. **Structured Conflict Resolution:** Synthesis reports explicitly highlight and reconcile contradictory research findings through methodology analysis rather than ignoring edge cases.

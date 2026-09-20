@@ -1,0 +1,20 @@
+What key trade-off between coordination completeness and performance did you prioritize, and how will that choice affect the system’s resilience during disruptions?  
+
+The design prioritizes **Bounded Local Consensus** (distributed, localized agent negotiation with state-aware decision caching) over **Global Coordination Completeness** (exhaustive, plant-wide combinatorial optimization across all agents simultaneously).
+
+Achieving complete global optimization across all agents in real time requires solving an NP-hard problem that scales exponentially with the number of machines, orders, and agents. Prioritizing performance and speed over absolute completeness directly shapes the system's resilience during operational disruptions in the following ways:
+
+### 1. Positive Effects on Resilience
+
+* **Blast Radius Isolation (Fault Containment)**
+Because coordination is decentralized into local agent neighborhoods (e.g., Quality Control interacting directly with adjacent line Production Planning), a disruption in one part of the plant—such as a localized tool breakdown or sensor fault—is isolated. Unaffected production lines continue operating without waiting for a global re-planning cycle.
+* **Low-Latency Rescheduling (Sub-Second Recovery)**
+When unexpected events occur (e.g., an urgent rush order or unexpected equipment halt), affected agents negotiate localized workarounds using bounded Contract Net Protocol (CNP) auctions or pre-validated decision caches. Rescheduling occurs in milliseconds rather than minutes, keeping shop-floor operations flowing without queue backpressure.
+* **Decoupled Graceful Degradation**
+If communication with higher-level Management Agents or central database nodes is lost due to a network partition, operational agents can still achieve local consensus using fallback rule sets. The plant degrades gracefully into autonomous sub-zones rather than halting globally.
+
+### 2. Trade-Off Vulnerabilities & Strategic Mitigations
+
+* **Risk: Sub-Optimal Cascading Ripple Effects (Local Optima Trap)**
+* *Vulnerability:* Because agents only optimize within their immediate operational scope, a series of quick, local decisions made during a disruption (e.g., re-routing three consecutive batches to Line B) might unintentionally create a bottleneck or raw material stockout further down the pipeline.
+* *Mitigation:* The system uses **Threshold-Triggered Global Arbitration**. While local agents handle immediate real-time adjustments, **Management Agents** continuously monitor global KPIs (such as overall buffer health and delivery SLA risks). If local state deviations exceed set thresholds (e.g., a line buffer exceeds 85% capacity), the Management Agent intervenes as an arbiter to trigger a broader, targeted re-balancing.
