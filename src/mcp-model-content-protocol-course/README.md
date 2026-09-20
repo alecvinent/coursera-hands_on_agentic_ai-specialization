@@ -7,7 +7,7 @@ Workbook for the Model Context Protocol course on Coursera. Evaluate MCP for AI 
 | Module | Topic | Key Files |
 |--------|-------|-----------|
 | 1 | Evaluate MCP for AI Integration | Task text files, evaluation PDF |
-| 2 | Design MCP Resource Schema | `mcp-demo.txt`, schema design PDF |
+| 2 | Design MCP Resource Schema | `mcp-demo.md`, schema design PDF |
 | 3 | Build Complete MCP Server | `mcp_server/` (full implementation), `mcp_portfolio/` (enterprise capstone) |
 
 ## Prerequisites

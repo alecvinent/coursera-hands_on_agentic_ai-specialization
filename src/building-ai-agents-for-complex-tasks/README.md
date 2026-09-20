@@ -6,7 +6,7 @@ Workbook for the Building AI Agents for Complex Tasks course on Coursera. Learn 
 
 | Module | Topic | Key Files |
 |--------|-------|-----------|
-| 1 | Agent Type Classification | `classifications.txt`, task text files |
+| 1 | Agent Type Classification | `classifications.md`, task text files |
 | 2 | Build Multi-Step Agents | `task1/agent.py`, `task2/agent.py` |
 | 3 | Diagnose & Improve Agent Behavior | `task1/`, `task2/agent.py`, `task3/agent.py` |
 
